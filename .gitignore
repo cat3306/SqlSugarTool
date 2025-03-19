@@ -1,0 +1,5 @@
+.vscode/
+[Bb]in/
+[Oo]bj/
+Models/
+config.json
