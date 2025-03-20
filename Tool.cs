@@ -4,7 +4,8 @@ using SqlSugar;
 using System.Text.Json;
 public class Tool
 {
-    public struct Config
+
+    public struct ConfigItem
     {
         [JsonPropertyName("connstr")]
         public string ConnStr { get; set; }
@@ -22,17 +23,22 @@ public class Tool
             Console.WriteLine($"path:{homeDir}/{options.Config}");
             return;
         }
-        var config = new Config();
+
+        var config = new ConfigItem
+        {
+            ConnStr = "server=127.0.0.1;port=3306;Database=test;Uid=root;Pwd=123456",
+            DbType = 1
+        };
         try
         {
-            config = JsonSerializer.Deserialize<Config>(File.ReadAllText($"{homeDir}/{options.Config}"));
+            var list = JsonSerializer.Deserialize<Dictionary<string, ConfigItem>>(File.ReadAllText($"{homeDir}/{options.Config}"));
+            config = list?.Where(it => it.Key == options.Alias).FirstOrDefault(new KeyValuePair<string, ConfigItem>("default", config)).Value ?? config;
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            Console.WriteLine("err:" + ex.Message);
             return;
         }
-
         SqlSugarScope sqlSugarScope = new SqlSugarScope(new ConnectionConfig()
         {
             DbType = DbType.MySql,
@@ -52,16 +58,23 @@ public class Tool
              var lets = it.Split('_');
              return string.Join("", lets.Select(l => l[..1].ToUpper() + l[1..]));
          };
-
-        var db = sqlSugarScope.DbFirst.StringNullable();
-        if (options.TableName.IsNullOrEmpty())
+        try
         {
-            db.FormatPropertyName(formatFunc).IsCreateAttribute().FormatClassName(formatFunc).CreateClassFile(options.OutDir);
-        }
-        else
-        {
+            var db = sqlSugarScope.DbFirst.StringNullable();
+            if (options.TableName.IsNullOrEmpty())
+            {
+                db.FormatPropertyName(formatFunc).IsCreateAttribute().FormatClassName(formatFunc).CreateClassFile(options.OutDir);
+            }
+            else
+            {
 
-            db.Where(options.TableName).FormatPropertyName(formatFunc).IsCreateAttribute().FormatClassName(formatFunc).CreateClassFile(options.OutDir);
+                db.Where(options.TableName).FormatPropertyName(formatFunc).IsCreateAttribute().FormatClassName(formatFunc).CreateClassFile(options.OutDir);
+            }
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine("err:" + ex.Message);
+        }
+
     }
 }
