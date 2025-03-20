@@ -14,10 +14,18 @@ public class Tool
     }
     public static void Run(Options options)
     {
+        var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        if (options.ShowConfig)
+        {
+            var str = File.ReadAllText($"{homeDir}/{options.Config}");
+            Console.WriteLine(str);
+            Console.WriteLine($"path:{homeDir}/{options.Config}");
+            return;
+        }
         var config = new Config();
         try
         {
-            config = JsonSerializer.Deserialize<Config>(File.ReadAllText(options.Config));
+            config = JsonSerializer.Deserialize<Config>(File.ReadAllText($"{homeDir}/{options.Config}"));
         }
         catch (Exception ex)
         {
