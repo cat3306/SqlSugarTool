@@ -24,11 +24,7 @@ public class Tool
             return;
         }
 
-        var config = new ConfigItem
-        {
-            ConnStr = "server=127.0.0.1;port=3306;Database=test;Uid=root;Pwd=123456",
-            DbType = 1
-        };
+        var config = new ConfigItem { };
         try
         {
             var list = JsonSerializer.Deserialize<Dictionary<string, ConfigItem>>(File.ReadAllText($"{homeDir}/{options.Config}"));
@@ -37,6 +33,11 @@ public class Tool
         catch (Exception ex)
         {
             Console.WriteLine("err:" + ex.Message);
+            return;
+        }
+        if (config.ConnStr.IsNullOrEmpty())
+        {
+            Console.WriteLine($"未找到相应的配置别名{options.Alias}，检查配置文件和参数是否正确。");
             return;
         }
         SqlSugarScope sqlSugarScope = new SqlSugarScope(new ConnectionConfig()
