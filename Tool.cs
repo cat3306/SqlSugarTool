@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using Microsoft.IdentityModel.Tokens;
 using SqlSugar;
 using System.Text.Json;
+using System.Text;
 public class Tool
 {
 
@@ -15,19 +16,38 @@ public class Tool
     }
     public static void Run(Options options)
     {
-        var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        //var homeDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var dirTuple = Options.DefaultDir();
         if (options.ShowConfig)
         {
-            var str = File.ReadAllText($"{homeDir}/{options.Config}");
+            if (!File.Exists(dirTuple.Item2))
+            {
+                Console.WriteLine($"配置文件不存在。初始化配置文件。{dirTuple.Item2}");
+                if (!Directory.Exists(dirTuple.Item1))
+                    Directory.CreateDirectory(dirTuple.Item1);
+                try
+                {
+                    var file = File.Create(dirTuple.Item2);
+                    var json = JsonSerializer.Serialize(new Dictionary<string, ConfigItem>() { { "default", new ConfigItem { ConnStr = "server=127.0.0.1;port=3306;Database=test;Uid=root;Pwd=123456", DbType = 1 } } });
+                    file.Write(Encoding.UTF8.GetBytes(json));
+                    file.Close();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("err:" + ex.Message);
+                    return;
+                }
+            }
+            var str = File.ReadAllText(dirTuple.Item2);
             Console.WriteLine(str);
-            Console.WriteLine($"path:{homeDir}/{options.Config}");
+            Console.WriteLine($"path:{Options.DefaultDir().Item2}");
             return;
         }
 
         var config = new ConfigItem { };
         try
         {
-            var list = JsonSerializer.Deserialize<Dictionary<string, ConfigItem>>(File.ReadAllText($"{homeDir}/{options.Config}"));
+            var list = JsonSerializer.Deserialize<Dictionary<string, ConfigItem>>(File.ReadAllText(Options.DefaultDir() + options.Config));
             config = list?.Where(it => it.Key == options.Alias).FirstOrDefault(new KeyValuePair<string, ConfigItem>("default", config)).Value ?? config;
         }
         catch (Exception ex)
