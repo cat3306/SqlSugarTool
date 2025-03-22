@@ -4,3 +4,5 @@
 Models/
 config.json
 .DS_Store
+.idea/
+SqlSugarTool.sln.DotSettings.user
