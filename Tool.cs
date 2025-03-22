@@ -47,7 +47,7 @@ public class Tool
         var config = new ConfigItem { };
         try
         {
-            var list = JsonSerializer.Deserialize<Dictionary<string, ConfigItem>>(File.ReadAllText(Options.DefaultDir() + options.Config));
+            var list = JsonSerializer.Deserialize<Dictionary<string, ConfigItem>>(File.ReadAllText(Options.DefaultDir().Item2 + options.Config));
             config = list?.Where(it => it.Key == options.Alias).FirstOrDefault(new KeyValuePair<string, ConfigItem>("default", config)).Value ?? config;
         }
         catch (Exception ex)
